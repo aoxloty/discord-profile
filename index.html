@@ -38,6 +38,7 @@
       color: white;
       overflow: visible;
       padding: 0 0 16px 0;
+      transition: background 0.3s;
     }
 
     .discord-banner {
@@ -92,9 +93,9 @@
 
     .avatar-container {
       position: relative;
-      width: 80px;
-      height: 80px;
-      margin-top: -40px;
+      width: 96px;
+      height: 96px;
+      margin-top: -48px;
       border: 6px solid #111214;
       border-radius: 50%;
       background: #111214;
@@ -159,13 +160,22 @@
 
     #status {
       position: absolute;
-      bottom: -2px;
-      right: -2px;
-      width: 18px;
-      height: 18px;
+      bottom: 0px;
+      right: 0px;
+      width: 23px;
+      height: 23px;
       border-radius: 50%;
       border: 4px solid #111214;
       z-index: 10;
+    }
+
+    #server-tag {
+      margin-top: 3px;
+    }
+
+    #server-tag img {
+      width: 19px;
+      height: 19px;
     }
 
     .user-info {
@@ -194,6 +204,7 @@
       text-overflow: ellipsis;
       cursor: pointer;
       transition: color 0.2s;
+      margin-top: 4px;
     }
 
     #activity:hover {
@@ -206,7 +217,8 @@
       align-items: center;
       justify-content: center;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 5px;
+      max-width: 268px;
     }
 
     .badge-wrapper {
@@ -222,17 +234,24 @@
     }
 
     .card-link-btn {
-      position: absolute;
-      bottom: 12px;
-      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       background: rgba(255, 255, 255, 0.07);
       color: #b5bac1;
-      padding: 4px 8px;
-      border-radius: 4px;
+      padding: 6px 12px;
+      border-radius: 6px;
       text-decoration: none;
-      font-size: 12px;
+      font-size: 13px;
       transition: all 0.2s;
       border: 1px solid transparent;
+      margin-top: 6px;
+    }
+
+    .card-link-btn p {
+      margin: 0;
+      font-weight: bolder;
     }
 
     .card-link-btn:hover {
@@ -351,6 +370,11 @@
 
     <div class="user-info">
       <div id="username" class="loading-pulse">Loading...</div>
+      <div style="display:flex; align-items:center; gap:6px;">
+        <div id="server-tag"
+          style="display:none; align-items:center; gap:3px; background:rgba(255,255,255,0.07); padding:2px 6px; border-radius:4px; font-size:13px; font-weight:bolder; color:#dcddde;">
+        </div>
+      </div>
       <div id="activity" class="loading-pulse">—</div>
 
       <div id="badges"></div>
@@ -359,6 +383,7 @@
     <a href="https://discord.com/users/639087320795971625" class="card-link-btn" target="_blank"
       title="Open Discord profile">
       <i class="fas fa-external-link-alt"></i>
+      <p>View Discord Profile</p>
     </a>
   </div>
 
@@ -391,12 +416,23 @@
         document.getElementById('username').textContent = user.global_name || user.username;
         document.getElementById('username').classList.remove('loading-pulse');
 
+        const themeColors = profile.user_profile?.theme_colors || user.user_profile?.theme_colors;
+        const card = document.querySelector('.discord-card');
+
+        if (themeColors && themeColors.length === 2) {
+          const toHex = n => '#' + n.toString(16).padStart(6, '0');
+          const [c1, c2] = themeColors.map(toHex);
+          card.style.background = `linear-gradient(135deg, ${c1}, ${c2})`;
+        } else {
+          card.style.background = '#111214'; 
+        }
+
         const decoData = profile.discord_user?.avatar_decoration_data
           || user?.avatar_decoration_data
           || profile.avatar_decoration_data;
         const deco = document.getElementById('decoration');
         if (decoData?.asset) {
-          deco.src = `https://cdn.discordapp.com/avatar-decoration-assets/${decoData.asset}.png?size=256`;
+          deco.src = `https://cdn.discordapp.com/avatar-decoration-presets/${decoData.asset}.png?size=256`;
           deco.style.display = 'block';
           deco.onerror = () => { deco.style.display = 'none'; };
         } else {
@@ -413,6 +449,18 @@
           bannerEl.style.backgroundImage = 'none';
           bannerEl.style.backgroundColor = user.banner_color;
           currentBannerUrl = '';
+        }
+
+        const guildTag = user.primary_guild || profile.primary_guild;
+        const tagEl = document.getElementById('server-tag');
+        if (guildTag?.identity_enabled && guildTag?.tag) {
+          tagEl.innerHTML = `
+    <img src="https://cdn.discordapp.com/clan-badges/${guildTag.identity_guild_id}/${guildTag.badge}.png?size=16" alt="">
+    <span>${guildTag.tag}</span>
+  `;
+          tagEl.style.display = 'inline-flex';
+        } else {
+          tagEl.style.display = 'none';
         }
 
         const badgesEl = document.getElementById('badges');
@@ -441,7 +489,7 @@
             const tooltipRect = tooltip.getBoundingClientRect();
 
             let left = cardRect.left + (cardRect.width / 2) - (tooltipRect.width / 2);
-            let top = cardRect.bottom - 85;
+            let top = cardRect.bottom - 104;
 
             tooltip.style.left = left + 'px';
             tooltip.style.top = top + 'px';
@@ -536,7 +584,7 @@
       const tooltipRect = tooltip.getBoundingClientRect();
 
       let left = cardRect.left + (cardRect.width / 2) - (tooltipRect.width / 2);
-      let top = cardRect.bottom - 85;
+      let top = cardRect.bottom - 104;
 
       tooltip.style.left = left + 'px';
       tooltip.style.top = top + 'px';
